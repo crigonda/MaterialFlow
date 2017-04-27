@@ -11,6 +11,12 @@ class NodeState(Enum):
     """WORKING - WAITING"""
     WORKING = 1 ; WAITING = 2
 
+def trunc(number):
+    """Truncates to 3 decimals."""
+    if number == "":
+        return ""
+    return '%.3f'%number
+
 class ModelObject(object):
     """Object of the model."""
     def __init__(self, name, capacity):
@@ -74,7 +80,7 @@ class Node(ModelObject):
         # Adds the name
         canvas.create_text(x, y, text=self.name)
         # Adds the capacity
-        canvas.create_text(x, y+dy/2, text=str(self.current)+"/"+str(self.capacity))
+        canvas.create_text(x, y+dy/2, text=str(trunc(self.current))+"/"+str(self.capacity))
 
 class Edge(ModelObject):
     """Edge of the model."""
@@ -119,7 +125,7 @@ class Edge(ModelObject):
         canvas.create_line(xFrom, yFrom, xTo, yTo, arrow=LAST)
         # Adds text
         canvas.create_text((xFrom+xTo)/2, (yFrom+yTo)/2+10,\
-        text=self.name+": "+str(self.current)+"/"+str(self.capacity))
+        text=self.name+": "+str(trunc(self.current))+"/"+str(self.capacity))
 
 class Model(object):
     """Model."""

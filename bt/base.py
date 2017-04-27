@@ -195,8 +195,48 @@ class Consume(NodeTask):
         # Decreases value of incoming edge
         self.incEdge.decrease(self.incStep)
         # Increases node value, decreases remaining amount (verification done by threshold node)
-        self.node.increase(self.incStep)
-        self.remaining -= self.incStep
+        self.node.increase(self.nodeStep)
+        self.remaining -= self.nodeStep
+        # If a minimum threshold has been produced
+        if self.node.current >= self.minUpdate:
+            # Updates outgoing edge if possible
+            if self.outEdge.increase(self.nodeStep):
+                self.node.decrease(self.nodeStep)
+        # If the production is finished, returns FINISHED
+        if self.remaining < self.nodeStep:
+            self.remaining = self.toProduce
+            return Task.SUCCES
+        # Else, returns RUNNING
+        else:
+            return Task.RUNNING
+
+class MultipleConsume(NodeTask):
+    """Decreases the incoming edges, increases node and outgoing edge if posible."""
+    def __init__(self, incEdges, node, outEdge, toProduce, incSteps, nodeStep, minUpdate):
+        # Node
+        super().__init__(node)
+        # Total production to achieve
+        self.toProduce = toProduce
+        # Remaining production
+        self.remaining = toProduce
+        # Incoming edges
+        self.incEdges = incEdges
+        # Outgoing edge
+        self.outEdge = outEdge
+        # The amount by which the incoming edges are to be decreased
+        self.incSteps = incSteps
+        # The amount by which the node and the outgoing edge are to be increased
+        self.nodeStep = nodeStep
+        # The minimum amount to produce in the node before updating the outgoing edge
+        self.minUpdate = minUpdate
+
+    def run(self):
+        # Decreases value of incoming edges
+        for index, edge in enumerate(self.incEdges):
+            edge.decrease(self.incSteps[index])
+        # Increases node value, decreases remaining amount (verification done by threshold node)
+        self.node.increase(self.nodeStep)
+        self.remaining -= self.nodeStep
         # If a minimum threshold has been produced
         if self.node.current >= self.minUpdate:
             # Updates outgoing edge if possible

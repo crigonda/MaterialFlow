@@ -2,6 +2,11 @@ from model.ModelBuilder import receiptBT
 from model.Model import Node, Edge
 
 
+def trunc(number):
+    """Truncates to 3 decimals."""
+    return '%.3f'%float(number)
+print(trunc(10.01223355))
+
 CAPACITY = 360000
 # Nodes
 node = Node("node", CAPACITY)

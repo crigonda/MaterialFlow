@@ -24,6 +24,9 @@ MAX_TANK = 500000
 # ============================================ TREATMENT ===========================================
 MAX_TREATMENT = 10000
 MAX_PIT2 = 2000
+MIN_PIT1 = 50
+MIN_TANK = MIN_PIT1*1000
+TREATMENT_SPEED = 10 # tons by hour
 # ============================================ SHIPMENT ============================================
 MAX_SHIPMENT = 10000
 SHIPMENT_SPEED = 100 # tons by hour

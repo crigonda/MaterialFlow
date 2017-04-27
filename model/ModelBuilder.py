@@ -2,7 +2,8 @@
 
 from random import random
 from math import sqrt
-from bt.base import Sequence, SequenceStar, Threshold, SpaceChecker, Consume, Mine, Train, Boat
+from bt.base import Sequence, SequenceStar, Threshold, SpaceChecker,\
+Consume, MultipleConsume, Mine, Train, Boat
 from bt.decorator import Delay, Repeater
 from .config import *
 
@@ -79,10 +80,32 @@ def preparationBT(incEdge, node, outEdge):
     seq.add_child(consume)
     return seqStar
 
-def treatmentBT(node):
+def treatmentBT(incEdge1, incEdge2, node, outEdge):
     """Treatment BT."""
-    # TODO : complete
-    return Threshold(node, 1, Threshold.SUPERIOR)
+    seqStar = SequenceStar()
+    # Verifies tank
+    verifyTank = Threshold(incEdge1, MIN_TANK, Threshold.SUPERIOR)
+    seqStar.add_child(verifyTank)
+    # Verifies pit n°1
+    verifyPit1 = Threshold(incEdge2, MIN_PIT1, Threshold.SUPERIOR)
+    seqStar.add_child(verifyPit1)
+    # Repeats moving chemicals
+    repeater = Repeater()
+    seqStar.add_child(repeater)
+    seq = Sequence()
+    repeater.add_child(seq)
+    # Verifies if there is place in the current node
+    pitStep = TREATMENT_SPEED/(60/TICK)
+    tankStep = MIN_TANK/(60/TICK)
+    verifyNode = SpaceChecker(node, pitStep)
+    seq.add_child(verifyNode)
+    # Minimum to produce before updating the edge (ton)
+    minUpdate = 1
+    # Decreases incoming value, increases node and outgoing values
+    consume = MultipleConsume([incEdge1, incEdge2], node, outEdge, MIN_PIT1,\
+    [tankStep, pitStep], pitStep, minUpdate)
+    seq.add_child(consume)
+    return seqStar
 
 def shipmentBT(incEdge, node, outEdge):
     """Shipment BT."""
@@ -134,7 +157,7 @@ def buildModel(model):
     treatmentNode, treatmentIndex = model.addNode("Traitement du minerai", MAX_TREATMENT,\
     size, (50, 50))
     shipmentNode, shipmentIndex = model.addNode("Expédition", MAX_SHIPMENT, size, (80, 50))
-    boatNode, boatIndex = model.addNode("", "", (0, 0), (100, 50))
+    boatNode, boatIndex = model.addNode("","", (0, 0), (100, 50))
     # ********************** EDGES **********************
     trainEdge, _ = model.addEdge("Train", MAX_TRAIN, trainIndex, receiptIndex)
     receiptEdge, _ = model.addEdge("", MAX_RECEIPT, receiptIndex, preparationIndex)
@@ -147,6 +170,6 @@ def buildModel(model):
     receiptNode.bTree = receiptBT(trainEdge, receiptNode, receiptEdge)
     miningNode.bTree = miningBT(miningNode, pit1)
     preparationNode.bTree = preparationBT(receiptEdge, preparationNode, tank)
-    treatmentNode.bTree = treatmentBT(treatmentNode)
+    treatmentNode.bTree = treatmentBT(tank, pit1, treatmentNode, pit2)
     shipmentNode.bTree = shipmentBT(pit2, shipmentNode, boatEdge)
     boatNode.bTree = boatBT(boatEdge, boatNode)
