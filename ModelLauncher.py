@@ -26,8 +26,10 @@ class ModelLauncher(Process):
 
 # ========================================== LAUNCHER PART =========================================
 if __name__ == '__main__':
+    # Size of the GUI queue : increase if more memory available
+    QUEUE_SIZE = 100
     # Creates the model
-    QUEUE = Queue()
+    QUEUE = Queue(QUEUE_SIZE)
     PROC = ModelLauncher(QUEUE)
     # Creates the GUI
     GUI = ModelGUI(PROC)
