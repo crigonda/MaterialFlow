@@ -71,7 +71,7 @@ class ModelGUI(object):
             self.updateRendering(model)
             self.window.after(int(self.refreshRate*1000), self.update)
         except queue.Empty:
-            print("Queue is empty !!")
+            #print("Queue is empty !!")
             self.window.after(int(self.refreshRate*1000), self.update)
 
     def updateRendering(self, model):

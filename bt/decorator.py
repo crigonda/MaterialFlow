@@ -1,6 +1,5 @@
 """Decorators."""
 from bt.base import Task, Decorator
-from time import sleep
 
 class Delay(Decorator):
     """ Decorator base sur un simple delay. Il y a un seul child. """

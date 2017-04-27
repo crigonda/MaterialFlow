@@ -1,5 +1,6 @@
 """Nodes."""
 from abc import ABCMeta, abstractmethod
+from time import sleep
 
 class Task(object, metaclass=ABCMeta):
     """ Classe base pour un noeud du Behavior Tree """
@@ -140,14 +141,14 @@ class Threshold(Task):
 
     def _inf(self):
         """Inferior."""
-        if self.element.current < self.threshold:
+        if self.element.current <= self.threshold:
             return Task.SUCCES
         else:
             return Task.ECHEC
 
     def _sup(self):
         """Superior."""
-        if self.element.current > self.threshold:
+        if self.element.current >= self.threshold:
             return Task.SUCCES
         else:
             return Task.ECHEC
@@ -202,7 +203,8 @@ class Consume(NodeTask):
             if self.outEdge.increase(self.nodeStep):
                 self.node.decrease(self.nodeStep)
         # If the production is finished, returns FINISHED
-        if self.remaining <= 0:
+        if self.remaining < self.nodeStep:
+            self.remaining = self.toProduce
             return Task.SUCCES
         # Else, returns RUNNING
         else:

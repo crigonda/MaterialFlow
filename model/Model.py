@@ -5,7 +5,6 @@ from math import atan2, fabs, pi
 from copy import deepcopy
 from tkinter import LAST
 import queue
-from time import sleep
 
 # Walk type
 class NodeState(Enum):

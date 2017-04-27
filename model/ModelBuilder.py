@@ -38,6 +38,7 @@ def receiptBT(incEdge, node, outEdge):
     seqStar.add_child(verifyChemicals)
     # Repeats unloading
     repeater = Repeater()
+    seqStar.add_child(repeater)
     seq = Sequence()
     repeater.add_child(seq)
     # Verifies if there is place in the current node

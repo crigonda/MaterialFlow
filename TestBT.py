@@ -1,8 +1,8 @@
-from model.ModelBuilder import preparationBT
+from model.ModelBuilder import receiptBT
 from model.Model import Node, Edge
 
 
-CAPACITY = 1000000
+CAPACITY = 360000
 # Nodes
 node = Node("node", CAPACITY)
 # Edges
@@ -12,7 +12,14 @@ incEdge.nodeTo = node
 incEdge.current = CAPACITY
 outEdge.nodeFrom = node
 # Behaviour tree
-node.bTree = preparationBT(incEdge, node, outEdge)
-while True:
-    ret = node.bTree.run()
-    print(ret)
+node.bTree = receiptBT(incEdge, node, outEdge)
+# while True:
+#     ret = node.bTree.run()
+#     print(ret)
+
+for i in range(2):
+    for j in range(30):
+        ret = node.bTree.run()
+        print(ret)
+    # Reloads edge
+    incEdge.current = CAPACITY
