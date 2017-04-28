@@ -3,7 +3,7 @@
 # ********************************************* GENERAL ********************************************
 TICK = 1 # TIME UNIT (in min)
 # ============================================== TRAIN =============================================
-NB_TRAINS = 1
+NB_TRAINS = 1 # Trains a day
 NB_WAGONS = 12
 WAGON_CAPACITY = 30000
 TRAIN_REFRESH_TIME = 1440
@@ -18,7 +18,7 @@ MAX_MINING = 1000
 MAX_PIT1 = 100
 # =========================================== PREPARATION ==========================================
 MAX_PREPARATION = MAX_RECEIPT
-PREPARATION_TIME = 30 # TODO : realistic ?
+PREPARATION_TIME = TRAIN_UNLOADING_TIME/(MAX_TRAIN/MIN_RECEIPT) # TODO : realistic ?
 MIN_PREPARATION = MIN_RECEIPT
 MAX_TANK = 500000
 # ============================================ TREATMENT ===========================================

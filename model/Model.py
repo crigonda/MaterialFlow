@@ -15,7 +15,7 @@ def trunc(number):
     """Truncates to 3 decimals."""
     if number == "":
         return ""
-    return '%.3f'%number
+    return '%.2f'%number
 
 class ModelObject(object):
     """Object of the model."""

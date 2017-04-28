@@ -2,9 +2,9 @@
 
 from random import random
 from math import sqrt
-from bt.base import Sequence, SequenceStar, Threshold, SpaceChecker,\
-Consume, MultipleConsume, Mine, Train, Boat
-from bt.decorator import Delay, Repeater
+from bt.base import Sequence, SequenceStar, SelectorStar, Threshold, SpaceChecker, RawUpdater
+from bt.base import Consume, MultipleConsume, Mine, Train, Boat
+from bt.decorator import Delay, Repeater, ThresholdDec
 from .config import *
 
 
@@ -29,28 +29,6 @@ def trainBT(node, outEdge):
     wait.add_child(train)
     return wait
 
-def receiptBT(incEdge, node, outEdge):
-    """Receipt BT."""
-    # TODO : change quantity
-    quantity = NB_WAGONS*WAGON_CAPACITY
-    seqStar = SequenceStar()
-    # Verifies if material has arrived
-    verifyChemicals = Threshold(incEdge, quantity, Threshold.SUPERIOR)
-    seqStar.add_child(verifyChemicals)
-    # Repeats unloading
-    repeater = Repeater()
-    seqStar.add_child(repeater)
-    seq = Sequence()
-    repeater.add_child(seq)
-    # Verifies if there is place in the current node
-    step = quantity/(TRAIN_UNLOADING_TIME/TICK)
-    verifyNode = SpaceChecker(node, step)
-    seq.add_child(verifyNode)
-    # Decreases incoming value, increases node and outgoing values
-    consume = Consume(incEdge, node, outEdge, quantity, step, step, MIN_RECEIPT)
-    seq.add_child(consume)
-    return seqStar
-
 def miningBT(node, outEdge):
     """Mining BT."""
     nbTicks = MINE_REFRESH_TIME/TICK
@@ -58,73 +36,6 @@ def miningBT(node, outEdge):
     minUpdate = 1
     mine = Mine(node, outEdge, triangularDistrib, nbTicks, minUpdate)
     return mine
-
-def preparationBT(incEdge, node, outEdge):
-    """Preparation BT."""
-    quantity = NB_WAGONS*WAGON_CAPACITY
-    seqStar = SequenceStar()
-    # Verifies if chemicals are available
-    verifyChemicals = Threshold(incEdge, quantity, Threshold.SUPERIOR)
-    seqStar.add_child(verifyChemicals)
-    # Repeats moving chemicals
-    repeater = Repeater()
-    seqStar.add_child(repeater)
-    seq = Sequence()
-    repeater.add_child(seq)
-    # Verifies if there is place in the current node
-    step = quantity/(TRAIN_UNLOADING_TIME/TICK)
-    verifyNode = SpaceChecker(node, step)
-    seq.add_child(verifyNode)
-    # Decreases incoming value, increases node and outgoing values
-    consume = Consume(incEdge, node, outEdge, quantity, step, step, MIN_RECEIPT)
-    seq.add_child(consume)
-    return seqStar
-
-def treatmentBT(incEdge1, incEdge2, node, outEdge):
-    """Treatment BT."""
-    seqStar = SequenceStar()
-    # Verifies tank
-    verifyTank = Threshold(incEdge1, MIN_TANK, Threshold.SUPERIOR)
-    seqStar.add_child(verifyTank)
-    # Verifies pit n°1
-    verifyPit1 = Threshold(incEdge2, MIN_PIT1, Threshold.SUPERIOR)
-    seqStar.add_child(verifyPit1)
-    # Repeats moving chemicals
-    repeater = Repeater()
-    seqStar.add_child(repeater)
-    seq = Sequence()
-    repeater.add_child(seq)
-    # Verifies if there is place in the current node
-    pitStep = TREATMENT_SPEED/(60/TICK)
-    tankStep = MIN_TANK/(60/TICK)
-    verifyNode = SpaceChecker(node, pitStep)
-    seq.add_child(verifyNode)
-    # Minimum to produce before updating the edge (ton)
-    minUpdate = 1
-    # Decreases incoming value, increases node and outgoing values
-    consume = MultipleConsume([incEdge1, incEdge2], node, outEdge, MIN_PIT1,\
-    [tankStep, pitStep], pitStep, minUpdate)
-    seq.add_child(consume)
-    return seqStar
-
-def shipmentBT(incEdge, node, outEdge):
-    """Shipment BT."""
-    seqStar = SequenceStar()
-    # Verifies if pit n°2 is full enough
-    verifyPit = Threshold(incEdge, BOAT_CAPACITY, Threshold.SUPERIOR)
-    seqStar.add_child(verifyPit)
-    # Repeats loading
-    repeater = Repeater()
-    seq = Sequence()
-    repeater.add_child(seq)
-    # Verifies if there is place in the current node
-    step = SHIPMENT_SPEED/(60/TICK)
-    verifyNode = SpaceChecker(node, step)
-    seq.add_child(verifyNode)
-    # Decreases incoming value, increases node and outgoing values
-    consume = Consume(incEdge, node, outEdge, BOAT_CAPACITY, step, step, MIN_SHIPMENT)
-    seq.add_child(consume)
-    return seqStar
 
 def boatBT(incEdge, node):
     """Boat BT."""
@@ -136,6 +47,106 @@ def boatBT(incEdge, node):
     boat = Boat(node, incEdge, BOAT_CAPACITY)
     seq.add_child(boat)
     return boat
+
+def consumer(incEdge, node, outEdge, quantity, incStep, nodeStep, minUpdate):
+    """Consumer BT."""
+    seqStar1 = SequenceStar()
+    # Verifies if there is enough space in the outgoing edge
+    outEdgeChecker = SpaceChecker(outEdge, quantity)
+    seqStar1.add_child(outEdgeChecker)
+    # Selects among one of the two following possibilities
+    selectorStar = SelectorStar()
+    seqStar1.add_child(selectorStar)
+    # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ FIRST POSSIBILITY ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    # Is there already material in the node ?
+    nodeChecker = ThresholdDec(node, quantity)
+    selectorStar.add_child(nodeChecker)
+    # Updates the outgoing edge if it the case
+    outEdgeUpdater = RawUpdater(node, outEdge, quantity)
+    nodeChecker.add_child(outEdgeUpdater)
+    # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ SECOND POSSIBILITY ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    seqStar2 = SequenceStar()
+    selectorStar.add_child(seqStar2)
+    # Is there enough material in the incoming edge to begin production ?
+    incEdgeChecker = Threshold(incEdge, quantity)
+    seqStar2.add_child(incEdgeChecker)
+    # If it is the case, repeat production step
+    repeater = Repeater()
+    seqStar2.add_child(repeater)
+    seq = Sequence()
+    repeater.add_child(seq)
+    # Is there enough space in the node ?
+    verifyNode = SpaceChecker(node, nodeStep)
+    seq.add_child(verifyNode)
+    # If yes, updates it
+    consume = Consume(incEdge, node, outEdge, quantity, incStep, nodeStep, minUpdate)
+    seq.add_child(consume)
+    return seqStar1
+
+def receiptBT(incEdge, node, outEdge):
+    """Receipt BT."""
+    quantity = NB_WAGONS*WAGON_CAPACITY
+    step = quantity/(TRAIN_UNLOADING_TIME/TICK)
+    minUpdate = MIN_RECEIPT
+    return consumer(incEdge, node, outEdge, quantity, step, step, minUpdate)
+
+def preparationBT(incEdge, node, outEdge):
+    """Preparation BT."""
+    quantity = MIN_PREPARATION
+    step = quantity/(PREPARATION_TIME/TICK)
+    minUpdate = MIN_RECEIPT
+    return consumer(incEdge, node, outEdge, quantity, step, step, minUpdate)
+
+def shipmentBT(incEdge, node, outEdge):
+    """Shipment BT."""
+    step = SHIPMENT_SPEED/(60/TICK)
+    quantity = BOAT_CAPACITY
+    minUpdate = MIN_SHIPMENT
+    return consumer(incEdge, node, outEdge, quantity, step, step, minUpdate)
+
+def treatmentBT(incEdge1, incEdge2, node, outEdge):
+    """Treatment BT."""
+    pitStep = TREATMENT_SPEED/(60/TICK)
+    tankStep = MIN_TANK/(60/TICK)
+    quantity = MIN_PIT1
+    # Minimum to produce before updating the edge (ton)
+    minUpdate = 1
+    seqStar1 = SequenceStar()
+    # Verifies if there is enough space in the pit n°2
+    pit2Checker = SpaceChecker(outEdge, quantity)
+    seqStar1.add_child(pit2Checker)
+    # Selects among one of the two following possibilities
+    selectorStar = SelectorStar()
+    seqStar1.add_child(selectorStar)
+    # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ FIRST POSSIBILITY ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    # Is there already material in the node ?
+    nodeChecker = ThresholdDec(node, quantity)
+    selectorStar.add_child(nodeChecker)
+    # Updates the outgoing edge if it the case
+    outEdgeUpdater = RawUpdater(node, outEdge, quantity)
+    nodeChecker.add_child(outEdgeUpdater)
+    # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ SECOND POSSIBILITY ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    seqStar2 = SequenceStar()
+    selectorStar.add_child(seqStar2)
+    # Are there enough chemicals in the tank ?
+    tankChecker = Threshold(incEdge1, MIN_TANK)
+    seqStar2.add_child(tankChecker)
+    # Is there enough ore in the pit n°1 ?
+    pit1Checker = Threshold(incEdge2, MIN_PIT1)
+    seqStar2.add_child(pit1Checker)
+    # If it is the case, repeat production step
+    repeater = Repeater()
+    seqStar2.add_child(repeater)
+    seq = Sequence()
+    repeater.add_child(seq)
+    # Is there enough space in the node ?
+    verifyNode = SpaceChecker(node, pitStep)
+    seq.add_child(verifyNode)
+    # If yes, updates it
+    consume = MultipleConsume([incEdge1, incEdge2], node, outEdge, quantity,\
+    [tankStep, pitStep], pitStep, minUpdate)
+    seq.add_child(consume)
+    return seqStar1
 
 # ==================================================================================================
 
@@ -157,7 +168,7 @@ def buildModel(model):
     treatmentNode, treatmentIndex = model.addNode("Traitement du minerai", MAX_TREATMENT,\
     size, (50, 50))
     shipmentNode, shipmentIndex = model.addNode("Expédition", MAX_SHIPMENT, size, (80, 50))
-    boatNode, boatIndex = model.addNode("","", (0, 0), (100, 50))
+    boatNode, boatIndex = model.addNode("", "", (0, 0), (100, 50))
     # ********************** EDGES **********************
     trainEdge, _ = model.addEdge("Train", MAX_TRAIN, trainIndex, receiptIndex)
     receiptEdge, _ = model.addEdge("", MAX_RECEIPT, receiptIndex, preparationIndex)

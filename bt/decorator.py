@@ -43,3 +43,43 @@ class Repeater(Decorator):
 
     def add_child(self, c):
         super().add_child(c)
+
+# ==================================================================================================
+
+class ThresholdDec(Decorator):
+    """Threshold condition decorator."""
+    # Comparison type
+    INFERIOR, SUPERIOR = range(2)
+
+    def __init__(self, element, threshold, comp=SUPERIOR):
+        super().__init__()
+        self.element = element
+        self.threshold = threshold
+        if comp == ThresholdDec.INFERIOR:
+            self.cond = self._inf
+        else:
+            self.cond = self._sup
+
+    def _inf(self):
+        """Inferior."""
+        if self.element.current <= self.threshold:
+            return True
+        else:
+            return False
+
+    def _sup(self):
+        """Superior."""
+        if self.element.current >= self.threshold:
+            return True
+        else:
+            return False
+
+    def run(self):
+        if self.cond():
+            status = self._children[0].run()
+            return status
+        else:
+            return Task.ECHEC
+
+    def add_child(self, c):
+        super().add_child(c)

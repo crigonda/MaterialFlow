@@ -27,6 +27,7 @@ class ModelLauncher(Process):
 # ========================================== LAUNCHER PART =========================================
 if __name__ == '__main__':
     # Size of the GUI queue : increase if more memory available
+    # To have the GUI and model synchronized, simply set to 1
     QUEUE_SIZE = 100
     # Creates the model
     QUEUE = Queue(QUEUE_SIZE)
