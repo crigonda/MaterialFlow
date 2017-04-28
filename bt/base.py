@@ -1,6 +1,5 @@
 """Nodes."""
 from abc import ABCMeta, abstractmethod
-from time import sleep
 
 class Task(object, metaclass=ABCMeta):
     """ Classe base pour un noeud du Behavior Tree """

@@ -1,6 +1,6 @@
 """GUI for model rendering."""
 
-from tkinter import Tk, PanedWindow, Canvas, LabelFrame, Scale, DoubleVar
+from tkinter import Tk, PanedWindow, Canvas, LabelFrame, Label, Scale, DoubleVar
 from tkinter import TOP, Y, BOTH, ALL, VERTICAL, HORIZONTAL
 from time import sleep
 import queue
@@ -13,13 +13,14 @@ BG_COLOR = '#f0f8ff'
 
 class ModelGUI(object):
     """Rendering of the model."""
-    def __init__(self, modelProc):
+    def __init__(self, modelProc, tick):
         self.modelProc = modelProc
+        self.tick = tick
         self.queue = modelProc.getQueue()
         # ----------------- Model parameters -----------------
         # Waiting time between two events
         self.refreshRate = DEFAULT_REFRESH_RATE
-        # Current simulation step
+        # Elapsed time (in number of ticks)
         self.count = 0
         # ------------------------ GUI -----------------------
         # Main window
@@ -45,12 +46,16 @@ class ModelGUI(object):
         variable=self.stepVar, label="# Refresh rate", bg=BG_COLOR, bd=1)
         slider.bind("<ButtonRelease-1>", self.updateRate)
         slider.grid(row=1, column=1)
+        # ===> Elapsed time
+        self.timeLabel = Label(paramFrame, text="# Elapsed time (hours) :\n0", bg=BG_COLOR)
+        self.timeLabel.grid(row=3, column=1)
         # Rows and columns configuration
         paramFrame.grid_columnconfigure(0, weight=1)
         paramFrame.grid_columnconfigure(1, weight=2)
         paramFrame.grid_columnconfigure(2, weight=1)
         paramFrame.grid_rowconfigure(0, weight=1)
         paramFrame.grid_rowconfigure(2, weight=2)
+        paramFrame.grid_rowconfigure(4, weight=2)
 
     def onClosing(self):
         """Called when exiting the window."""
@@ -76,6 +81,7 @@ class ModelGUI(object):
 
     def updateRendering(self, model):
         """Updates the rendering."""
+        self.updateTime()
         self.cleanCanvas()
         nodes, edges = model
         # Draws the nodes
@@ -84,6 +90,13 @@ class ModelGUI(object):
         # Draws the edges
         for edge in edges:
             edge.draw(self.canvas, CANVAS_X, CANVAS_Y)
+
+    def updateTime(self):
+        """Updates the timeLabel value."""
+        self.count += 1
+        # Current simulation time (hours)
+        newTime = (self.count*self.tick)/60
+        self.timeLabel['text'] = "# Elapsed time (hours) :\n" + str('%.2f'%newTime)
 
     def updateRate(self, event):
         """Updates the refresh rate when the slider is moved."""

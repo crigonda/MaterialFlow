@@ -4,6 +4,7 @@ from multiprocessing import Process, Queue
 from gui.ModelGUI import ModelGUI
 from model.Model import Model
 from model.ModelBuilder import buildModel
+from model.config import TICK
 
 class ModelLauncher(Process):
     """Model launcher."""
@@ -33,7 +34,7 @@ if __name__ == '__main__':
     QUEUE = Queue(QUEUE_SIZE)
     PROC = ModelLauncher(QUEUE)
     # Creates the GUI
-    GUI = ModelGUI(PROC)
+    GUI = ModelGUI(PROC, TICK)
     # Starts the random walk
     PROC.start()
     # Displays the GUI
