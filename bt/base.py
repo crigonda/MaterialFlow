@@ -205,6 +205,11 @@ class Consume(NodeTask):
         # If the production is finished, returns FINISHED
         if self.remaining < self.nodeStep:
             self.remaining = self.toProduce
+            # Empty the node
+            remaining = self.node.current
+            if remaining <= self.minUpdate:
+                self.node.decrease(remaining)
+                self.outEdge.increase(remaining)
             return Task.SUCCES
         # Else, returns RUNNING
         else:
@@ -245,6 +250,11 @@ class MultipleConsume(NodeTask):
         # If the production is finished, returns FINISHED
         if self.remaining < self.nodeStep:
             self.remaining = self.toProduce
+            # Empty the node
+            remaining = self.node.current
+            if remaining <= self.minUpdate:
+                self.node.decrease(remaining)
+                self.outEdge.increase(remaining)
             return Task.SUCCES
         # Else, returns RUNNING
         else:

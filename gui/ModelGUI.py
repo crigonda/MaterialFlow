@@ -41,7 +41,7 @@ class ModelGUI(object):
         mainPane.add(paramFrame)
         # ===> Refresh rate slider
         self.stepVar = DoubleVar(paramFrame, value=DEFAULT_REFRESH_RATE)
-        slider = Scale(paramFrame, from_=0, to_=1, resolution=0.01, length=350, orient=VERTICAL,\
+        slider = Scale(paramFrame, from_=0, to_=0.5, resolution=0.001, length=350, orient=VERTICAL,\
         variable=self.stepVar, label="# Refresh rate", bg=BG_COLOR, bd=1)
         slider.bind("<ButtonRelease-1>", self.updateRate)
         slider.grid(row=1, column=1)
@@ -71,7 +71,7 @@ class ModelGUI(object):
             self.updateRendering(model)
             self.window.after(int(self.refreshRate*1000), self.update)
         except queue.Empty:
-            print("Queue is empty !!")
+            #print("Queue is empty !!")
             self.window.after(int(self.refreshRate*1000), self.update)
 
     def updateRendering(self, model):
