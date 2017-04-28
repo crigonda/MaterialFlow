@@ -19,6 +19,9 @@ def trunc(number):
 
 class ModelObject(object):
     """Object of the model."""
+    # Tolerance to approximations
+    TOLERANCE = 0.001
+
     def __init__(self, name, capacity):
         self.name = name
         # Current stock in the element
@@ -27,16 +30,16 @@ class ModelObject(object):
 
     def increase(self, amount):
         """Increases the current value of the object from a given amount."""
-        if self.current + amount <= self.capacity:
-            self.current += amount
+        if self.current + amount <= self.capacity+ModelObject.TOLERANCE:
+            self.current = min(self.current+amount, self.capacity)
             return True
         else:
             return False
 
     def decrease(self, amount):
         """Decreases the current value of the object from a given amount."""
-        if self.current - amount >= 0:
-            self.current -= amount
+        if self.current - amount >= 0-ModelObject.TOLERANCE:
+            self.current = max(self.current-amount, 0)
             return True
         else:
             return False

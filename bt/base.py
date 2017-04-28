@@ -1,6 +1,9 @@
 """Nodes."""
 from abc import ABCMeta, abstractmethod
 
+# Tolerance to approximations
+TOLERANCE = 0.001
+
 class Task(object, metaclass=ABCMeta):
     """ Classe base pour un noeud du Behavior Tree """
     ECHEC, SUCCES, RUNNING = range(3)  # compatibilite: False est un ECHEC et True est un SUCCES
@@ -140,14 +143,14 @@ class Threshold(Task):
 
     def _inf(self):
         """Inferior."""
-        if self.element.current <= self.threshold:
+        if self.element.current <= self.threshold+TOLERANCE:
             return Task.SUCCES
         else:
             return Task.ECHEC
 
     def _sup(self):
         """Superior."""
-        if self.element.current >= self.threshold:
+        if self.element.current >= self.threshold-TOLERANCE:
             return Task.SUCCES
         else:
             return Task.ECHEC
@@ -281,7 +284,7 @@ class Consume(NodeTask):
                 # Decreases node
                 self.node.decrease(self.nodeStep)
         # If the production is finished, returns FINISHED
-        if self.remaining < self.nodeStep:
+        if self.remaining <= self.nodeStep-TOLERANCE:
             self.remaining = self.toProduce
             # Empty the node
             leftovers = self.node.current
@@ -327,7 +330,7 @@ class MultipleConsume(NodeTask):
                 # Decreases node
                 self.node.decrease(self.nodeStep)
         # If the production is finished, returns FINISHED
-        if self.remaining < self.nodeStep:
+        if self.remaining <= self.nodeStep-TOLERANCE:
             self.remaining = self.toProduce
             # Empty the node
             leftovers = self.node.current

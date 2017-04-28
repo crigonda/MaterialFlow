@@ -23,7 +23,7 @@ def trainBT(node, outEdge):
     """Train BT."""
     # We assume that the train always brings 2/3 solvent, 1/3 base
     # Waits a given amount of time between two trains
-    wait = Delay(TRAIN_REFRESH_TIME)
+    wait = Delay(TRAIN_REFRESH_TIME/TICK)
     # Train brings in wagons with chemical products
     train = Train(node, outEdge, NB_WAGONS, WAGON_CAPACITY)
     wait.add_child(train)
@@ -171,7 +171,7 @@ def buildModel(model):
     boatNode, boatIndex = model.addNode("", "", (0, 0), (100, 50))
     # ********************** EDGES **********************
     trainEdge, _ = model.addEdge("Train", MAX_TRAIN, trainIndex, receiptIndex)
-    receiptEdge, _ = model.addEdge("", MAX_RECEIPT, receiptIndex, preparationIndex)
+    receiptEdge, _ = model.addEdge("", MAX_RECEIPT_EDGE, receiptIndex, preparationIndex)
     pit1, _ = model.addEdge("pit n°1", MAX_PIT1, miningIndex, treatmentIndex)
     tank, _ = model.addEdge("tank", MAX_TANK, preparationIndex, treatmentIndex)
     pit2, _ = model.addEdge("pit n°2", MAX_PIT2, treatmentIndex, shipmentIndex)

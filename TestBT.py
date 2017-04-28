@@ -1,25 +1,25 @@
-from model.ModelBuilder import receiptBT
+from model.ModelBuilder import shipmentBT
 from model.Model import Node, Edge
 
-CAPACITY = 360000
+CAPACITY = 3000
 # Nodes
 node = Node("node", CAPACITY)
-node.current = CAPACITY
 # Edges
 incEdge = Edge("incEdge", CAPACITY)
 outEdge = Edge("outEdge", CAPACITY)
 incEdge.nodeTo = node
-incEdge.current = CAPACITY
+incEdge.current = 2000
 outEdge.nodeFrom = node
 # Behaviour tree
-node.bTree = receiptBT(incEdge, node, outEdge)
-while True:
+node.bTree = shipmentBT(incEdge, node, outEdge)
+# while True:
+#     ret = node.bTree.run()
+#     print(ret)
+
+count = 0
+for i in range(1200):
+    count+=1
+    if i == 1198:
+        print(count)
     ret = node.bTree.run()
     print(ret)
-
-# for i in range(2):
-#     for j in range(30):
-#         ret = node.bTree.run()
-#         print(ret)
-#     # Reloads edge
-#     incEdge.current = CAPACITY
