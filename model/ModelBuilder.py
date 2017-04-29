@@ -7,7 +7,6 @@ from bt.base import Consume, MultipleConsume, Mine, Train, Boat
 from bt.decorator import Delay, Repeater, ThresholdDec
 from .config import *
 
-
 def triangularDistrib():
     """Generates a Triangular-distributed random variate."""
     MIN = 10 ; MAX = 60 ; MOD = 20
@@ -155,7 +154,7 @@ def buildModel(model):
      # ============ About position and size : ============
     # Size and position values must be between 0 and 100,
     # because they are percentages of the canvas size.
-    size = (20, 15)
+    size = (18, 13)
     # ===================================================
     # ********************** NODES **********************
     trainNode, trainIndex = model.addNode("", "", (0, 0), (0, 20))
